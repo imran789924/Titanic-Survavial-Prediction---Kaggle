@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Feb 15 20:19:53 2020
+Created on Sun Feb 16 19:36:08 2020
 
 @author: imran
 """
@@ -27,25 +27,38 @@ X.drop(X.columns[8], axis = 1, inplace = True)
 X = X.fillna(X.groupby('Pclass').transform('mean'))
 test = test.fillna(X.groupby('Pclass').transform('mean'))
 
-'''
-from sklearn.impute import SimpleImputer
-imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
-X = imputer.fit_transform(X) 
-test = imputer.transform(test)
-'''
-from sklearn.preprocessing import StandardScaler
-sc = StandardScaler()
-X = sc.fit_transform(X)
-test = sc.transform(test)
 
 
-from sklearn.ensemble import RandomForestClassifier
-classifier = RandomForestClassifier(n_estimators=180, criterion='gini', random_state=0)
-classifier.fit(X, y)
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+
+classifier = Sequential()
+
+classifier.add(Dense(output_dim=5, init='uniform', activation='relu', input_dim=8))
+classifier.add(Dense(output_dim=7, init='uniform', activation='relu'))
+classifier.add(Dense(output_dim=1, init='uniform', activation='sigmoid'))
+
+classifier.compile(optimizer='adam', loss='binary_crossentropy' ,metrics=['accuracy'])
+
+classifier.fit(X, y, batch_size=20, epochs=150)
+
 y_pred = classifier.predict(test)
+y_pred = (y_pred > 0.5)
 
-np.count_nonzero(y_pred)
+#y_pred = (y_pred == 'true')
+y_pred2 = 1*y_pred
 
-output = pd.DataFrame({'PassengerId': test_data.PassengerId, 'Survived': y_pred})
+l = y_pred2.ravel()
+
+
+
+output = pd.DataFrame({'PassengerId': test_data.PassengerId, 'Survived': l})
 output.to_csv('my_submission.csv', index=False)
 print("Your submission was successfully saved!")
+
+'''
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+'''
